@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuizMaster - Test Your Knowledge</title>
+    <link rel="stylesheet" href="style/styles.css" />
+</head>
+<body>
+    <div class="container">
+        <!-- Setup Screen -->
+        <div id="setupScreen" class="screen active">
+            <h1>🧠 QuizMaster</h1>
+            <p style="margin-bottom: 2rem; color: #718096; font-size: 1.1rem;">
+                Challenge yourself with personalized quizzes!
+            </p>
+            
+            <div class="form-group">
+                <label for="difficulty">Choose Difficulty Level:</label>
+                <select id="difficulty">
+                    <option value="">Select difficulty...</option>
+                    <option value="easy">🟢 Easy</option>
+                    <option value="medium">🟡 Medium</option>
+                    <option value="hard">🔴 Hard</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="category">Choose Your Interest:</label>
+                <select id="category">
+                    <option value="">Select category...</option>
+                    <option value="9">General Knowledge</option>
+                    <option value="17">Science & Nature</option>
+                    <option value="18">Computers</option>
+                    <option value="19">Mathematics</option>
+                    <option value="21">Sports</option>
+                    <option value="22">Geography</option>
+                    <option value="23">History</option>
+                    <option value="11">Entertainment: Film</option>
+                    <option value="12">Entertainment: Music</option>
+                    <option value="15">Entertainment: Video Games</option>
+                </select>
+            </div>
+
+            <button class="btn" onclick="startQuiz()">Start Quiz 🚀</button>
+        </div>
+
+        <!-- Quiz Screen -->
+        <div id="quizScreen" class="screen">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressBar"></div>
+            </div>
+            
+            <div class="loading" id="loadingSpinner">
+                <div class="spinner"></div>
+                <span style="margin-left: 1rem;">Loading questions...</span>
+            </div>
+
+            <div id="questionContainer" style="display: none;">
+                <div class="timer-container">
+                    <div class="timer-circle">
+                        <div class="timer-fill" id="timerFill"></div>
+                        <div class="timer-text" id="timerText">30</div>
+                    </div>
+                    <div class="timer-label">seconds remaining</div>
+                </div>
+                
+                <div class="question-card">
+                    <div class="question-text" id="questionText"></div>
+                    <div id="answersContainer"></div>
+                </div>
+                
+                <div id="resultMessage" class="result-message" style="display: none;"></div>
+                
+                <button class="btn" id="nextBtn" onclick="nextQuestion()" style="display: none;">
+                    Next Question ➡️
+                </button>
+            </div>
+
+            <div class="error-message" id="errorMessage" style="display: none;"></div>
+        </div>
+
+        <!-- Results Screen -->
+        <div id="resultsScreen" class="screen">
+            <h2 style="color: #4a5568; margin-bottom: 1rem;">Quiz Complete! 🎉</h2>
+            <div class="score-display" id="finalScore"></div>
+            <p id="scoreMessage" style="font-size: 1.2rem; margin-bottom: 2rem; color: #718096;"></p>
+            
+            <button class="btn" onclick="restartQuiz()">Play Again 🔄</button>
+            <button class="btn secondary" onclick="goHome()">Change Settings ⚙️</button>
+        </div>
+    </div>
+
+    <script src="script/main.js"></script>
+</body>
+</html>
