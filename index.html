@@ -8,8 +8,94 @@
 </head>
 <body>
     <div class="container">
+        <div id="authScreen" class="screen active">
+            <h1>🧠 QuizMaster</h1>
+            <p style="margin-bottom: 2rem; color: #718096; font-size: 1.1rem;">
+                Welcome! Please login or create an account to track your progress.
+            </p>
+            
+            <div id="loginForm" class="auth-form">
+                <h3 style="margin-bottom: 1.5rem; color: #4a5568;">Login</h3>
+                <div class="form-group">
+                    <label for="loginEmail">Email:</label>
+                    <input type="email" id="loginEmail" placeholder="Enter your email" required>
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Password:</label>
+                    <input type="password" id="loginPassword" placeholder="Enter your password" required>
+                </div>
+                <button class="btn" onclick="login()">Login 🚪</button>
+                <p style="margin-top: 1rem; color: #718096;">
+                    Don't have an account? 
+                    <a href="#" onclick="toggleAuthForm()" style="color: #667eea; text-decoration: none;">Sign up here</a>
+                </p>
+            </div>
+            
+            <div id="signupForm" class="auth-form" style="display: none;">
+                <h3 style="margin-bottom: 1.5rem; color: #4a5568;">Sign Up</h3>
+                <div class="form-group">
+                    <label for="signupName">Name:</label>
+                    <input type="text" id="signupName" placeholder="Enter your name" required>
+                </div>
+                <div class="form-group">
+                    <label for="signupEmail">Email:</label>
+                    <input type="email" id="signupEmail" placeholder="Enter your email" required>
+                </div>
+                <div class="form-group">
+                    <label for="signupPassword">Password:</label>
+                    <input type="password" id="signupPassword" placeholder="Create a password" required>
+                </div>
+                <button class="btn" onclick="signup()">Sign Up 📝</button>
+                <p style="margin-top: 1rem; color: #718096;">
+                    Already have an account? 
+                    <a href="#" onclick="toggleAuthForm()" style="color: #667eea; text-decoration: none;">Login here</a>
+                </p>
+            </div>
+            <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid #e2e8f0;">
+                <p style="color: #718096; margin-bottom: 1rem;">Or</p>
+                <button class="btn secondary" onclick="continueWithoutLogin()">
+                    Continue without Login 🚀
+                </button>
+            </div>
+        </div>
+
+        <!-- History Screen -->
+        <div id="historyScreen" class="screen">
+            <h2 style="color: #4a5568; margin-bottom: 2rem;">📊 Your Quiz History</h2>
+            
+            <div id="userInfo" style="margin-bottom: 2rem; padding: 1rem; background: #f7fafc; border-radius: 10px;">
+                <p><strong>Welcome back, <span id="userName"></span>!</strong></p>
+            </div>
+            
+            <div id="statsContainer" style="margin-bottom: 2rem;">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalQuizzes">0</div>
+                        <div class="stat-label">Total Quizzes</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="avgScore">0%</div>
+                        <div class="stat-label">Average Score</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="bestScore">0%</div>
+                        <div class="stat-label">Best Score</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="historyList" class="history-container">
+                <!-- History items will be populated by JavaScript -->
+            </div>
+            
+            <div style="margin-top: 2rem;">
+                <button class="btn" onclick="showScreen('setupScreen')">Take New Quiz 🚀</button>
+                <button class="btn secondary" onclick="logout()" id="logoutBtn">Logout 🚪</button>
+            </div>
+        </div>
+
         <!-- Setup Screen -->
-        <div id="setupScreen" class="screen active">
+        <div id="setupScreen" class="screen">
             <h1>🧠 QuizMaster</h1>
             <p style="margin-bottom: 2rem; color: #718096; font-size: 1.1rem;">
                 Challenge yourself with personalized quizzes!
@@ -43,6 +129,9 @@
             </div>
 
             <button class="btn" onclick="startQuiz()">Start Quiz 🚀</button>
+            <button class="btn secondary" onclick="showHistoryScreen()" id="historyBtn">
+                View History 📊
+            </button>
         </div>
 
         <!-- Quiz Screen -->
@@ -88,6 +177,7 @@
             
             <button class="btn" onclick="restartQuiz()">Play Again 🔄</button>
             <button class="btn secondary" onclick="goHome()">Change Settings ⚙️</button>
+            <button class="btn secondary" onclick="showHistoryScreen()">View History 📊</button>
         </div>
     </div>
 

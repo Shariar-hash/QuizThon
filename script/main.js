@@ -6,6 +6,13 @@ let selectedAnswer = null;
 let timer = null;
 let timeLeft = 0;
 let currentDifficulty = '';
+let currentUser = null;
+
+// In-memory storage (replace localStorage for Claude artifacts)
+let memoryStorage = {
+    quizUsers: {},
+    currentUser: null
+};
 
 // API configuration
 const API_BASE = 'https://opentdb.com/api.php';
@@ -23,6 +30,203 @@ function showScreen(screenId) {
         screen.classList.remove('active');
     });
     document.getElementById(screenId).classList.add('active');
+}
+
+// User management functions
+function initializeApp() {
+    // Check if user is already logged in
+    const savedUser = memoryStorage.currentUser;
+    if (savedUser) {
+        currentUser = savedUser;
+        showLoggedInState();
+    } else {
+        showScreen('authScreen');
+    }
+}
+
+function toggleAuthForm() {
+    const loginForm = document.getElementById('loginForm');
+    const signupForm = document.getElementById('signupForm');
+    
+    if (loginForm.style.display === 'none') {
+        loginForm.style.display = 'block';
+        signupForm.style.display = 'none';
+    } else {
+        loginForm.style.display = 'none';
+        signupForm.style.display = 'block';
+    }
+}
+
+function continueWithoutLogin() {
+    currentUser = null;
+    showScreen('setupScreen');
+}
+
+async function signup() {
+    const name = document.getElementById('signupName').value.trim();
+    const email = document.getElementById('signupEmail').value.trim();
+    const password = document.getElementById('signupPassword').value.trim();
+    
+    if (!name || !email || !password) {
+        alert('Please fill in all fields');
+        return;
+    }
+    
+    // Check if user already exists
+    const users = memoryStorage.quizUsers;
+    if (users[email]) {
+        alert('User already exists with this email');
+        return;
+    }
+    
+    // Create new user
+    const newUser = {
+        id: Date.now().toString(),
+        name,
+        email,
+        password: btoa(password), // Simple encoding (not secure for production)
+        createdAt: new Date().toISOString(),
+        quizHistory: []
+    };
+    
+    users[email] = newUser;
+    memoryStorage.quizUsers = users;
+    
+    currentUser = newUser;
+    memoryStorage.currentUser = currentUser;
+    
+    showLoggedInState();
+    alert('Account created successfully!');
+}
+
+async function login() {
+    const email = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value.trim();
+    
+    if (!email || !password) {
+        alert('Please fill in all fields');
+        return;
+    }
+    
+    const users = memoryStorage.quizUsers;
+    const user = users[email];
+    
+    if (!user || atob(user.password) !== password) {
+        alert('Invalid email or password');
+        return;
+    }
+    
+    currentUser = user;
+    memoryStorage.currentUser = currentUser;
+    
+    showLoggedInState();
+}
+
+function logout() {
+    currentUser = null;
+    memoryStorage.currentUser = null;
+    showScreen('authScreen');
+}
+
+function showLoggedInState() {
+    document.getElementById('userName').textContent = currentUser.name;
+    showScreen('setupScreen');
+    updateHistoryDisplay();
+}
+
+function showHistoryScreen() {
+    showScreen('historyScreen');
+    updateHistoryDisplay();
+    
+    // Show/hide logout button based on login status
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (currentUser) {
+        logoutBtn.style.display = 'inline-block';
+        document.getElementById('userInfo').style.display = 'block';
+    } else {
+        logoutBtn.style.display = 'none';
+        document.getElementById('userInfo').style.display = 'none';
+    }
+}
+
+function saveQuizResult(percentage, totalQuestions) {
+    if (!currentUser) return; // Don't save if not logged in
+    
+    const categorySelect = document.getElementById('category');
+    const categoryText = categorySelect.options[categorySelect.selectedIndex].text;
+    
+    const quizResult = {
+        id: Date.now().toString(),
+        category: categoryText,
+        difficulty: currentDifficulty,
+        score: score,
+        totalQuestions: totalQuestions,
+        percentage: percentage,
+        date: new Date().toISOString(),
+        timestamp: Date.now()
+    };
+    
+    currentUser.quizHistory.unshift(quizResult); // Add to beginning of array
+    
+    // Update memory storage
+    const users = memoryStorage.quizUsers;
+    users[currentUser.email] = currentUser;
+    memoryStorage.quizUsers = users;
+    memoryStorage.currentUser = currentUser;
+}
+
+function updateHistoryDisplay() {
+    if (!currentUser) {
+        // Show login prompt for non-logged users
+        document.getElementById('historyList').innerHTML = 
+            '<div class="no-history">Please log in to view your quiz history!<br><br><button class="btn" onclick="showScreen(\'authScreen\')">Login Now 🚪</button></div>';
+        document.getElementById('totalQuizzes').textContent = '0';
+        document.getElementById('avgScore').textContent = '0%';
+        document.getElementById('bestScore').textContent = '0%';
+        return;
+    }
+    
+    const history = currentUser.quizHistory || [];
+    
+    // Update stats
+    const totalQuizzes = history.length;
+    const avgScore = totalQuizzes > 0 ? 
+        Math.round(history.reduce((sum, quiz) => sum + quiz.percentage, 0) / totalQuizzes) : 0;
+    const bestScore = totalQuizzes > 0 ? 
+        Math.max(...history.map(quiz => quiz.percentage)) : 0;
+    
+    document.getElementById('totalQuizzes').textContent = totalQuizzes;
+    document.getElementById('avgScore').textContent = avgScore + '%';
+    document.getElementById('bestScore').textContent = bestScore + '%';
+    
+    // Update history list
+    const historyList = document.getElementById('historyList');
+    
+    if (history.length === 0) {
+        historyList.innerHTML = '<div class="no-history">No quiz history yet. Take your first quiz!</div>';
+        return;
+    }
+    
+    historyList.innerHTML = history.map(quiz => {
+        const date = new Date(quiz.date).toLocaleDateString();
+        const time = new Date(quiz.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        
+        return `
+            <div class="history-item">
+                <div class="history-info">
+                    <div class="history-category">${quiz.category}</div>
+                    <div class="history-details">
+                        ${quiz.difficulty.charAt(0).toUpperCase() + quiz.difficulty.slice(1)} • 
+                        ${date} at ${time}
+                    </div>
+                </div>
+                <div class="history-score">
+                    <div class="score-value">${quiz.score}/${quiz.totalQuestions}</div>
+                    <div class="score-percentage">${quiz.percentage}%</div>
+                </div>
+            </div>
+        `;
+    }).join('');
 }
 
 // Start quiz function
@@ -225,6 +429,9 @@ function showResults() {
     const totalQuestions = currentQuestions.length;
     const percentage = Math.round((score / totalQuestions) * 100);
     
+    // Save quiz result to user history
+    saveQuizResult(percentage, totalQuestions);
+    
     document.getElementById('finalScore').textContent = `${score}/${totalQuestions}`;
     
     let message = '';
@@ -273,3 +480,21 @@ function goHome() {
     selectedAnswer = null;
     showScreen('setupScreen');
 }
+
+// Initialize app when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    initializeApp();
+});
+
+// Clear form inputs when switching between login/signup
+document.addEventListener('DOMContentLoaded', function() {
+    const clearForms = () => {
+        document.getElementById('loginEmail').value = '';
+        document.getElementById('loginPassword').value = '';
+        document.getElementById('signupName').value = '';
+        document.getElementById('signupEmail').value = '';
+        document.getElementById('signupPassword').value = '';
+    };
+    
+    // You can call clearForms() when needed
+});
