@@ -478,7 +478,18 @@ function showAnswerResults(userAnswer, timeUp = false) {
     }
     
     // Show next button immediately after showing results
-    document.getElementById('nextBtn').style.display = 'block';
+    const nextBtn = document.getElementById('nextBtn');
+    const isLastQuestion = (currentQuestionIndex + 1) >= currentQuestions.length;
+    
+    if (isLastQuestion) {
+        nextBtn.innerHTML = 'View Results 🏆';
+        nextBtn.onclick = showResults;
+    } else {
+        nextBtn.innerHTML = 'Next Question ➡️';
+        nextBtn.onclick = nextQuestion;
+    }
+    
+    nextBtn.style.display = 'block';
 }
 
 // Move to next question
@@ -489,6 +500,11 @@ function nextQuestion() {
     document.querySelectorAll('.answer-option').forEach(btn => {
         btn.classList.remove('selected', 'correct', 'incorrect', 'disabled');
     });
+    
+    // Reset next button to default state
+    const nextBtn = document.getElementById('nextBtn');
+    nextBtn.innerHTML = 'Next Question ➡️';
+    nextBtn.onclick = nextQuestion;
     
     selectedAnswer = null;
     displayQuestion();
