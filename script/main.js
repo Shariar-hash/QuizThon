@@ -7,15 +7,11 @@ let timer = null;
 let timeLeft = 0;
 let currentDifficulty = '';
 let currentUser = null;
-
-// In-memory storage (replace localStorage for Claude artifacts)
-let memoryStorage = {
-    quizUsers: {},
-    currentUser: null
-};
+let authToken = null;
 
 // API configuration
 const API_BASE = 'https://opentdb.com/api.php';
+const SERVER_BASE = 'http://localhost:3000/api';
 
 // Timer durations based on difficulty
 const TIMER_DURATIONS = {
@@ -35,11 +31,40 @@ function showScreen(screenId) {
 // User management functions
 function initializeApp() {
     // Check if user is already logged in
-    const savedUser = memoryStorage.currentUser;
-    if (savedUser) {
-        currentUser = savedUser;
-        showLoggedInState();
+    const savedToken = localStorage.getItem('authToken');
+    if (savedToken) {
+        authToken = savedToken;
+        fetchUserProfile();
     } else {
+        showScreen('authScreen');
+    }
+}
+
+async function fetchUserProfile() {
+    try {
+        const response = await fetch(`${SERVER_BASE}/auth/profile`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${authToken}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        const data = await response.json();
+        
+        if (response.ok) {
+            currentUser = data.user;
+            showLoggedInState();
+        } else {
+            // Token is invalid, clear it
+            localStorage.removeItem('authToken');
+            authToken = null;
+            showScreen('authScreen');
+        }
+    } catch (error) {
+        console.error('Error fetching user profile:', error);
+        localStorage.removeItem('authToken');
+        authToken = null;
         showScreen('authScreen');
     }
 }
@@ -48,6 +73,9 @@ function toggleAuthForm() {
     const loginForm = document.getElementById('loginForm');
     const signupForm = document.getElementById('signupForm');
     
+    // Clear form inputs when switching
+    clearForms();
+    
     if (loginForm.style.display === 'none') {
         loginForm.style.display = 'block';
         signupForm.style.display = 'none';
@@ -55,6 +83,14 @@ function toggleAuthForm() {
         loginForm.style.display = 'none';
         signupForm.style.display = 'block';
     }
+}
+
+function clearForms() {
+    document.getElementById('loginEmail').value = '';
+    document.getElementById('loginPassword').value = '';
+    document.getElementById('signupName').value = '';
+    document.getElementById('signupEmail').value = '';
+    document.getElementById('signupPassword').value = '';
 }
 
 function continueWithoutLogin() {
@@ -72,31 +108,38 @@ async function signup() {
         return;
     }
     
-    // Check if user already exists
-    const users = memoryStorage.quizUsers;
-    if (users[email]) {
-        alert('User already exists with this email');
+    if (password.length < 6) {
+        alert('Password must be at least 6 characters long');
         return;
     }
     
-    // Create new user
-    const newUser = {
-        id: Date.now().toString(),
-        name,
-        email,
-        password: btoa(password), // Simple encoding (not secure for production)
-        createdAt: new Date().toISOString(),
-        quizHistory: []
-    };
-    
-    users[email] = newUser;
-    memoryStorage.quizUsers = users;
-    
-    currentUser = newUser;
-    memoryStorage.currentUser = currentUser;
-    
-    showLoggedInState();
-    alert('Account created successfully!');
+    try {
+        const response = await fetch(`${SERVER_BASE}/auth/signup`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ name, email, password })
+        });
+
+        const data = await response.json();
+        
+        if (response.ok) {
+            // Store token and user data
+            authToken = data.token;
+            localStorage.setItem('authToken', authToken);
+            currentUser = data.user;
+            
+            showLoggedInState();
+            alert(data.message);
+            clearForms();
+        } else {
+            alert(data.error);
+        }
+    } catch (error) {
+        console.error('Signup error:', error);
+        alert('Network error. Please check your internet connection and try again.');
+    }
 }
 
 async function login() {
@@ -108,24 +151,41 @@ async function login() {
         return;
     }
     
-    const users = memoryStorage.quizUsers;
-    const user = users[email];
-    
-    if (!user || atob(user.password) !== password) {
-        alert('Invalid email or password');
-        return;
+    try {
+        const response = await fetch(`${SERVER_BASE}/auth/login`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ email, password })
+        });
+
+        const data = await response.json();
+        
+        if (response.ok) {
+            // Store token and user data
+            authToken = data.token;
+            localStorage.setItem('authToken', authToken);
+            currentUser = data.user;
+            
+            showLoggedInState();
+            alert(data.message);
+            clearForms();
+        } else {
+            alert(data.error);
+        }
+    } catch (error) {
+        console.error('Login error:', error);
+        alert('Network error. Please check your internet connection and try again.');
     }
-    
-    currentUser = user;
-    memoryStorage.currentUser = currentUser;
-    
-    showLoggedInState();
 }
 
 function logout() {
     currentUser = null;
-    memoryStorage.currentUser = null;
+    authToken = null;
+    localStorage.removeItem('authToken');
     showScreen('authScreen');
+    clearForms();
 }
 
 function showLoggedInState() {
@@ -149,30 +209,40 @@ function showHistoryScreen() {
     }
 }
 
-function saveQuizResult(percentage, totalQuestions) {
-    if (!currentUser) return; // Don't save if not logged in
+async function saveQuizResult(percentage, totalQuestions) {
+    if (!currentUser || !authToken) return; // Don't save if not logged in
     
     const categorySelect = document.getElementById('category');
     const categoryText = categorySelect.options[categorySelect.selectedIndex].text;
     
-    const quizResult = {
-        id: Date.now().toString(),
-        category: categoryText,
-        difficulty: currentDifficulty,
-        score: score,
-        totalQuestions: totalQuestions,
-        percentage: percentage,
-        date: new Date().toISOString(),
-        timestamp: Date.now()
-    };
-    
-    currentUser.quizHistory.unshift(quizResult); // Add to beginning of array
-    
-    // Update memory storage
-    const users = memoryStorage.quizUsers;
-    users[currentUser.email] = currentUser;
-    memoryStorage.quizUsers = users;
-    memoryStorage.currentUser = currentUser;
+    try {
+        const response = await fetch(`${SERVER_BASE}/quiz/save-result`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${authToken}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                category: categoryText,
+                difficulty: currentDifficulty,
+                score: score,
+                totalQuestions: totalQuestions,
+                percentage: percentage
+            })
+        });
+
+        const data = await response.json();
+        
+        if (response.ok) {
+            // Update local user data with the new quiz result
+            currentUser.quizHistory.unshift(data.quizResult);
+            console.log('Quiz result saved successfully!');
+        } else {
+            console.error('Failed to save quiz result:', data.error);
+        }
+    } catch (error) {
+        console.error('Error saving quiz result:', error);
+    }
 }
 
 function updateHistoryDisplay() {
@@ -484,17 +554,4 @@ function goHome() {
 // Initialize app when page loads
 document.addEventListener('DOMContentLoaded', function() {
     initializeApp();
-});
-
-// Clear form inputs when switching between login/signup
-document.addEventListener('DOMContentLoaded', function() {
-    const clearForms = () => {
-        document.getElementById('loginEmail').value = '';
-        document.getElementById('loginPassword').value = '';
-        document.getElementById('signupName').value = '';
-        document.getElementById('signupEmail').value = '';
-        document.getElementById('signupPassword').value = '';
-    };
-    
-    // You can call clearForms() when needed
 });
