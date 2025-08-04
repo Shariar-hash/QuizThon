@@ -1,12 +1,18 @@
 {
   "name": "quizthon",
   "version": "1.0.0",
-  "description": "A quiz application with user authentication and history tracking",
+  "description": "Interactive quiz platform for testing knowledge across multiple categories",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
-    "client": "live-server --port=3001 --entry-file=index.html"
+    "client": "live-server --port=3001 --entry-file=index.html",
+    "build": "npm install --production",
+    "prestart": "npm run build"
+  },
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
   },
   "dependencies": {
     "express": "^4.18.2",
@@ -20,7 +26,7 @@
     "nodemon": "^3.0.1",
     "live-server": "^1.2.2"
   },
-  "keywords": ["quiz", "mongodb", "express", "authentication"],
-  "author": "",
+  "keywords": ["quiz", "trivia", "education", "learning", "knowledge", "interactive", "web-app"],
+  "author": "QuizThon Team",
   "license": "MIT"
 }

@@ -1,0 +1,27 @@
+{
+    "name": "QuizThon",
+    "short_name": "QuizThon",
+    "description": "Challenge your knowledge with interactive quizzes across multiple categories",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#ffffff",
+    "theme_color": "#667eea",
+    "orientation": "portrait-primary",
+    "icons": [
+        {
+            "src": "/assets/icon-192x192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "maskable any"
+        },
+        {
+            "src": "/assets/icon-512x512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable any"
+        }
+    ],
+    "categories": ["education", "games", "entertainment"],
+    "lang": "en",
+    "dir": "ltr"
+}

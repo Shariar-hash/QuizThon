@@ -1,0 +1,25 @@
+{
+  "name": "QuizThon Production",
+  "version": "1.0.0",
+  "build": {
+    "env": {
+      "NODE_ENV": "production"
+    }
+  },
+  "scripts": {
+    "postinstall": "npm prune --production"
+  },
+  "production": {
+    "domains": ["quizthon.com", "www.quizthon.com"],
+    "ssl": true,
+    "compression": true,
+    "minify": true,
+    "security": {
+      "helmet": true,
+      "cors": {
+        "origin": ["https://quizthon.com", "https://www.quizthon.com"],
+        "credentials": true
+      }
+    }
+  }
+}

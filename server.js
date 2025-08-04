@@ -3,15 +3,39 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const { OAuth2Client } = require('google-auth-library');
 require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Google OAuth client
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
 // Middleware
-app.use(cors());
-app.use(express.json());
-app.use(express.static('.')); // Serve static files from current directory
+app.use(cors({
+    origin: process.env.NODE_ENV === 'production' 
+        ? ['https://quizthon.com', 'https://www.quizthon.com']
+        : true,
+    credentials: true
+}));
+
+// Security headers
+app.use((req, res, next) => {
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('X-Frame-Options', 'DENY');
+    res.setHeader('X-XSS-Protection', '1; mode=block');
+    res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+    if (process.env.NODE_ENV === 'production') {
+        res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+    }
+    next();
+});
+
+app.use(express.json({ limit: '10mb' }));
+app.use(express.static('.', {
+    maxAge: process.env.NODE_ENV === 'production' ? '1d' : 0
+})); // Serve static files from current directory
 
 // MongoDB Connection
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/quizthon', {
@@ -37,8 +61,23 @@ const userSchema = new mongoose.Schema({
     },
     password: {
         type: String,
-        required: true,
+        required: function() {
+            return this.authProvider !== 'google';
+        },
         minlength: 6
+    },
+    authProvider: {
+        type: String,
+        enum: ['email', 'google'],
+        default: 'email'
+    },
+    googleId: {
+        type: String,
+        sparse: true
+    },
+    avatar: {
+        type: String,
+        default: null
     },
     quizHistory: [{
         id: String,
@@ -109,6 +148,7 @@ app.post('/api/auth/signup', async (req, res) => {
             name,
             email,
             password: hashedPassword,
+            authProvider: 'email',
             quizHistory: []
         });
 
@@ -128,6 +168,8 @@ app.post('/api/auth/signup', async (req, res) => {
                 id: user._id,
                 name: user.name,
                 email: user.email,
+                authProvider: user.authProvider,
+                avatar: user.avatar,
                 quizHistory: user.quizHistory
             }
         });
@@ -173,12 +215,93 @@ app.post('/api/auth/login', async (req, res) => {
                 id: user._id,
                 name: user.name,
                 email: user.email,
+                authProvider: user.authProvider,
+                avatar: user.avatar,
                 quizHistory: user.quizHistory
             }
         });
     } catch (error) {
         console.error('Login error:', error);
         res.status(500).json({ error: 'Server error. Please try again.' });
+    }
+});
+
+// Google OAuth Login
+app.post('/api/auth/google', async (req, res) => {
+    try {
+        const { credential } = req.body;
+
+        if (!credential) {
+            return res.status(400).json({ error: 'Google credential is required' });
+        }
+
+        // Verify the Google token
+        const ticket = await googleClient.verifyIdToken({
+            idToken: credential,
+            audience: process.env.GOOGLE_CLIENT_ID,
+        });
+
+        const payload = ticket.getPayload();
+        const { sub: googleId, email, name, picture } = payload;
+
+        if (!email || !name) {
+            return res.status(400).json({ error: 'Incomplete Google profile information' });
+        }
+
+        // Check if user already exists
+        let user = await User.findOne({
+            $or: [
+                { email: email },
+                { googleId: googleId }
+            ]
+        });
+
+        if (user) {
+            // Update existing user with Google info if needed
+            if (!user.googleId) {
+                user.googleId = googleId;
+                user.authProvider = 'google';
+                user.avatar = picture;
+                await user.save();
+            }
+        } else {
+            // Create new user
+            user = new User({
+                name,
+                email,
+                googleId,
+                authProvider: 'google',
+                avatar: picture,
+                quizHistory: []
+            });
+            await user.save();
+        }
+
+        // Generate JWT token
+        const token = jwt.sign(
+            { userId: user._id, email: user.email },
+            process.env.JWT_SECRET,
+            { expiresIn: '7d' }
+        );
+
+        res.json({
+            message: 'Google authentication successful!',
+            token,
+            user: {
+                id: user._id,
+                name: user.name,
+                email: user.email,
+                authProvider: user.authProvider,
+                avatar: user.avatar,
+                quizHistory: user.quizHistory
+            }
+        });
+    } catch (error) {
+        console.error('Google auth error:', error);
+        if (error.message.includes('Token used too early') || error.message.includes('Invalid token')) {
+            return res.status(400).json({ error: 'Invalid Google token' });
+        }
+        res.status(500).json({ error: 'Google authentication failed. Please try again.' });
     }
 });
 
@@ -195,7 +318,10 @@ app.get('/api/auth/profile', authenticateToken, async (req, res) => {
                 id: user._id,
                 name: user.name,
                 email: user.email,
-                quizHistory: user.quizHistory
+                authProvider: user.authProvider,
+                avatar: user.avatar,
+                quizHistory: user.quizHistory,
+                createdAt: user.createdAt
             }
         });
     } catch (error) {
