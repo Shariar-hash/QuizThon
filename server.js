@@ -15,7 +15,7 @@ const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 // Middleware
 app.use(cors({
     origin: process.env.NODE_ENV === 'production' 
-        ? ['https://quizthon.com', 'https://www.quizthon.com']
+        ? ['https://quizthon.vercel.app', 'https://quizthon-backend.onrender.com']
         : true,
     credentials: true
 }));
@@ -119,6 +119,29 @@ const authenticateToken = (req, res, next) => {
 };
 
 // Routes
+
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+    res.json({ 
+        status: 'OK', 
+        message: 'QuizThon API is running!',
+        timestamp: new Date().toISOString(),
+        environment: process.env.NODE_ENV || 'development'
+    });
+});
+
+// API status endpoint
+app.get('/api', (req, res) => {
+    res.json({ 
+        message: 'QuizThon API - Welcome!',
+        version: '1.0.0',
+        endpoints: {
+            auth: '/api/auth/*',
+            quiz: '/api/quiz/*',
+            health: '/api/health'
+        }
+    });
+});
 
 // User Registration
 app.post('/api/auth/signup', async (req, res) => {
