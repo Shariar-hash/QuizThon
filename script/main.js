@@ -13,7 +13,7 @@ let authToken = null;
 const API_BASE = 'https://opentdb.com/api.php';
 const SERVER_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
     ? 'http://localhost:3000/api' 
-    : 'https://your-backend-domain.com/api'; // Update this with your actual backend URL
+    : 'https://quizthon-backend.onrender.com/api'; // Updated with your actual backend URL
 
 // Timer durations based on difficulty
 const TIMER_DURATIONS = {
