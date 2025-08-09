@@ -8,9 +8,16 @@
     <title>QuizThon - Challenge Your Knowledge with Interactive Quizzes</title>
     <meta name="title" content="QuizThon - Challenge Your Knowledge with Interactive Quizzes">
     <meta name="description" content="Test your knowledge with QuizThon's interactive quizzes across multiple categories. Track your progress, compete with friends, and improve your skills in Science, History, Sports, and more!">
-    <meta name="keywords" content="quiz, trivia, knowledge test, online quiz, education, learning, brain training, QuizThon, interactive quiz">
+    <meta name="keywords" content="quiz, trivia, knowledge test, online quiz, education, learning, brain training, QuizThon, interactive quiz, free quiz, multiple choice, trivia game, educational quiz">
     <meta name="author" content="QuizThon">
     <meta name="robots" content="index, follow">
+    <meta name="language" content="English">
+    <meta name="revisit-after" content="7 days">
+    <meta name="rating" content="General">
+    
+    <!-- Additional SEO -->
+    <link rel="canonical" href="https://quizthon.com/">
+    <meta name="theme-color" content="#667eea">
     
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
@@ -103,26 +110,28 @@
             <div id="loginForm" class="auth-form">
                 <h3 style="margin-bottom: 1.5rem; color: #4a5568;">Login</h3>
                 <div id="loginError" class="error-message" style="display: none;"></div>
-                <div class="form-group">
-                    <label for="loginEmail">Email:</label>
-                    <input type="email" id="loginEmail" placeholder="Enter your email" required>
-                    <div id="loginEmailError" class="field-error" style="display: none;"></div>
-                </div>
-                <div class="form-group">
-                    <label for="loginPassword">Password:</label>
-                    <input type="password" id="loginPassword" placeholder="Enter your password" required>
-                    <div id="loginPasswordError" class="field-error" style="display: none;"></div>
-                </div>
-                <button class="btn" id="loginBtn" onclick="login()">
-                    <span class="btn-text">Login 🚪</span>
-                    <span class="btn-loader" style="display: none;">⏳ Logging in...</span>
-                </button>
+                <form onsubmit="return false;">
+                    <div class="form-group">
+                        <label for="loginEmail">Email:</label>
+                        <input type="email" id="loginEmail" placeholder="Enter your email" autocomplete="email" required>
+                        <div id="loginEmailError" class="field-error" style="display: none;"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="loginPassword">Password:</label>
+                        <input type="password" id="loginPassword" placeholder="Enter your password" autocomplete="current-password" required>
+                        <div id="loginPasswordError" class="field-error" style="display: none;"></div>
+                    </div>
+                    <button class="btn" id="loginBtn" onclick="login()">
+                        <span class="btn-text">Login 🚪</span>
+                        <span class="btn-loader" style="display: none;">⏳ Logging in...</span>
+                    </button>
+                </form>
                 
                 <div style="margin: 1rem 0; text-align: center; color: #718096;">
                     or
                 </div>
                 
-                <button class="google-btn" id="googleBtn" onclick="signInWithGoogle()">
+                <button class="google-btn" id="googleBtn">
                     <svg class="google-icon" viewBox="0 0 24 24">
                         <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                         <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -141,25 +150,27 @@
             <div id="signupForm" class="auth-form" style="display: none;">
                 <h3 style="margin-bottom: 1.5rem; color: #4a5568;">Sign Up</h3>
                 <div id="signupError" class="error-message" style="display: none;"></div>
-                <div class="form-group">
-                    <label for="signupName">Name:</label>
-                    <input type="text" id="signupName" placeholder="Enter your name" required>
-                    <div id="signupNameError" class="field-error" style="display: none;"></div>
-                </div>
-                <div class="form-group">
-                    <label for="signupEmail">Email:</label>
-                    <input type="email" id="signupEmail" placeholder="Enter your email" required>
-                    <div id="signupEmailError" class="field-error" style="display: none;"></div>
-                </div>
-                <div class="form-group">
-                    <label for="signupPassword">Password:</label>
-                    <input type="password" id="signupPassword" placeholder="Create a password (min 6 characters)" required>
-                    <div id="signupPasswordError" class="field-error" style="display: none;"></div>
-                </div>
-                <button class="btn" id="signupBtn" onclick="signup()">
-                    <span class="btn-text">Sign Up 📝</span>
-                    <span class="btn-loader" style="display: none;">⏳ Creating account...</span>
-                </button>
+                <form onsubmit="return false;">
+                    <div class="form-group">
+                        <label for="signupName">Name:</label>
+                        <input type="text" id="signupName" placeholder="Enter your name" autocomplete="name" required>
+                        <div id="signupNameError" class="field-error" style="display: none;"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="signupEmail">Email:</label>
+                        <input type="email" id="signupEmail" placeholder="Enter your email" autocomplete="email" required>
+                        <div id="signupEmailError" class="field-error" style="display: none;"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="signupPassword">Password:</label>
+                        <input type="password" id="signupPassword" placeholder="Create a password (min 6 characters)" autocomplete="new-password" required>
+                        <div id="signupPasswordError" class="field-error" style="display: none;"></div>
+                    </div>
+                    <button class="btn" id="signupBtn" onclick="signup()">
+                        <span class="btn-text">Sign Up 📝</span>
+                        <span class="btn-loader" style="display: none;">⏳ Creating account...</span>
+                    </button>
+                </form>
                 <p style="margin-top: 1rem; color: #718096;">
                     Already have an account? 
                     <a href="#" onclick="toggleAuthForm()" style="color: #667eea; text-decoration: none; font-weight: 600;">Login here</a>

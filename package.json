@@ -8,25 +8,35 @@
     "dev": "nodemon server.js",
     "client": "live-server --port=3001 --entry-file=index.html",
     "build": "npm install --production",
-    "prestart": "npm run build"
+    "prestart": "npm run build",
+    "postinstall": "npm run build"
   },
   "engines": {
     "node": ">=16.0.0",
     "npm": ">=8.0.0"
   },
   "dependencies": {
-    "express": "^4.18.2",
-    "mongoose": "^7.5.0",
-    "cors": "^2.8.5",
     "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "google-auth-library": "^10.2.1",
     "jsonwebtoken": "^9.0.2",
-    "dotenv": "^16.3.1"
+    "mongoose": "^7.5.0"
   },
   "devDependencies": {
-    "nodemon": "^3.0.1",
-    "live-server": "^1.2.2"
+    "live-server": "^1.2.2",
+    "nodemon": "^3.0.1"
   },
-  "keywords": ["quiz", "trivia", "education", "learning", "knowledge", "interactive", "web-app"],
+  "keywords": [
+    "quiz",
+    "trivia",
+    "education",
+    "learning",
+    "knowledge",
+    "interactive",
+    "web-app"
+  ],
   "author": "QuizThon Team",
   "license": "MIT"
 }

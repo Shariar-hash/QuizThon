@@ -11,7 +11,9 @@ let authToken = null;
 
 // API configuration
 const API_BASE = 'https://opentdb.com/api.php';
-const SERVER_BASE = window.location.origin + '/api';
+const SERVER_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+    ? 'http://localhost:3000/api' 
+    : 'https://your-backend-domain.com/api'; // Update this with your actual backend URL
 
 // Timer durations based on difficulty
 const TIMER_DURATIONS = {
@@ -330,6 +332,12 @@ function continueWithoutLogin() {
 // Google OAuth Functions
 function initializeGoogleSignIn() {
     console.log('Initializing Google Sign-In...');
+    console.log('Current origin:', window.location.origin);
+    console.log('Current URL:', window.location.href);
+    console.log('Current protocol:', window.location.protocol);
+    console.log('Current host:', window.location.host);
+    console.log('Current hostname:', window.location.hostname);
+    console.log('Current port:', window.location.port);
     
     if (typeof google !== 'undefined' && google.accounts) {
         try {
@@ -338,13 +346,13 @@ function initializeGoogleSignIn() {
                 callback: handleGoogleSignIn,
                 auto_select: false,
                 cancel_on_tap_outside: true,
-                allowed_parent_origin: ['http://localhost:3000', 'http://127.0.0.1:3000'],
                 itp_support: true
             });
             console.log('Google Sign-In initialized successfully');
+            showGoogleSignInButton();
         } catch (error) {
             console.error('Google Sign-In initialization error:', error);
-            alert('Google OAuth Error: ' + error.message + '\n\nThis usually means:\n1. Incorrect authorized origins in Google Cloud Console\n2. Add these origins:\n   - http://localhost:3000\n   - http://127.0.0.1:3000');
+            alert('Google OAuth Error: ' + error.message + '\n\nThis usually means:\n1. Incorrect authorized origins in Google Cloud Console\n2. Add these origins:\n   - http://localhost:3001\n   - http://127.0.0.1:3001\n   - http://localhost:3000\n   - http://127.0.0.1:3000');
         }
     } else {
         console.log('Google SDK not available, will use demo mode');
@@ -356,17 +364,12 @@ function signInWithGoogle() {
     
     // Try real Google sign-in first
     if (typeof google !== 'undefined' && google.accounts) {
-        console.log('Google SDK loaded, attempting sign-in');
+        console.log('Google SDK loaded, using button-based sign-in');
         try {
-            // For production, use a cleaner approach
-            google.accounts.id.prompt((notification) => {
-                console.log('Google prompt notification:', notification);
-                
-                if (notification.isNotDisplayed() || notification.isSkippedMoment() || notification.isDismissedMoment()) {
-                    // Fallback to alternative authentication
-                    showGoogleSignInFallback();
-                }
-            });
+            // Note: The actual sign-in will happen through the rendered button
+            // This function is called when the user clicks the custom button
+            // The Google-rendered button will automatically handle the OAuth flow
+            console.log('Google sign-in button should handle the authentication');
             
         } catch (error) {
             console.error('Google sign-in error:', error);
@@ -414,42 +417,85 @@ function handleGoogleOAuthError(error) {
 function showGoogleSignInButton() {
     // Create a manual sign-in button if the prompt doesn't work
     if (typeof google !== 'undefined' && google.accounts) {
-        google.accounts.id.renderButton(
-            document.getElementById("googleBtn"),
-            { 
-                theme: "outline", 
-                size: "large",
-                width: 250,
-                text: "continue_with"
-            }
-        );
+        try {
+            google.accounts.id.renderButton(
+                document.getElementById("googleBtn"),
+                { 
+                    theme: "outline", 
+                    size: "large",
+                    width: 250,
+                    text: "continue_with"
+                }
+            );
+            console.log('Google button rendered successfully');
+            console.log('If 403 error occurs, check Google Cloud Console authorized origins:');
+            console.log('Required origins:', [
+                'http://localhost:3001',
+                'http://127.0.0.1:3001', 
+                'http://localhost:3000',
+                'http://127.0.0.1:3000'
+            ]);
+        } catch (error) {
+            console.error('Error rendering Google button:', error);
+            setupButtonFallback();
+        }
+    } else {
+        setupButtonFallback();
+    }
+    
+    function setupButtonFallback() {
+        // Fallback: Add click handler for demo mode
+        const googleBtn = document.getElementById("googleBtn");
+        if (googleBtn) {
+            googleBtn.addEventListener('click', function() {
+                console.log('Google OAuth failed, offering demo mode');
+                const useDemo = confirm('Google OAuth is not configured properly.\n\nWould you like to:\n\n✅ Continue with Demo Mode (recommended)\n❌ Cancel and use email/password login\n\nDemo mode lets you test the quiz features!');
+                if (useDemo) {
+                    simulateGoogleSignIn();
+                }
+            });
+        }
     }
 }
 
 // Temporary demo function for testing
 function simulateGoogleSignIn() {
     console.log('Showing demo mode options');
-    const confirmDemo = confirm('Demo Mode: Google OAuth might not be configured properly.\n\nWould you like to simulate a Google sign-in for testing purposes?\n\n(Click OK to continue with demo, Cancel to see setup instructions)');
     
-    if (confirmDemo) {
+    // Show a more user-friendly modal
+    const userChoice = confirm('🚀 Welcome to QuizThon Demo Mode!\n\nGoogle OAuth is currently being configured. Would you like to:\n\n✅ Continue with Demo Mode\n   → Test all quiz features\n   → Temporary user profile\n   → Full functionality\n\n❌ Cancel and use Email/Password\n   → Create real account\n   → Permanent quiz history\n\nRecommended: Try Demo Mode first!');
+    
+    if (userChoice) {
         console.log('User chose demo mode');
-        // Simulate a Google user
+        // Create a more realistic demo user
         const demoUser = {
             name: 'Demo User',
-            email: 'demo@gmail.com',
-            avatar: 'https://via.placeholder.com/40x40/667eea/ffffff?text=DU'
+            email: 'demo@quizthon.com',
+            avatar: 'https://via.placeholder.com/40x40/667eea/ffffff?text=DU',
+            authProvider: 'google-demo'
         };
         
-        // Simulate the Google OAuth response
-        const simulatedResponse = {
-            credential: 'demo_jwt_token_for_testing'
-        };
+        // Show loading state briefly for realism
+        setLoadingState('googleBtn', true);
         
-        // Call the existing handler with simulated data
-        handleGoogleSignInDemo(simulatedResponse, demoUser);
+        setTimeout(() => {
+            // Simulate the Google OAuth response
+            const simulatedResponse = {
+                credential: 'demo_jwt_token_for_testing_' + Date.now()
+            };
+            
+            // Call the existing handler with simulated data
+            handleGoogleSignInDemo(simulatedResponse, demoUser);
+        }, 800);
+        
     } else {
-        console.log('User chose to see setup instructions');
-        alert('Google OAuth Setup Issues:\n\n1. Check if your Google Client ID is correct\n2. Verify authorized origins in Google Cloud Console:\n   - http://localhost:3001\n   - http://127.0.0.1:3001\n3. Try the debug page: /debug-oauth.html\n\nFor now, you can use email/password authentication or demo mode.');
+        console.log('User chose to use email authentication');
+        // Focus on email login
+        const emailInput = document.getElementById('loginEmail');
+        if (emailInput) {
+            emailInput.focus();
+            showNotification('You can create an account using email and password below', 'info');
+        }
     }
 }
 
@@ -1192,8 +1238,36 @@ document.addEventListener('DOMContentLoaded', function() {
     // Add real-time validation
     addRealTimeValidation();
     
-    // Initialize Google Sign-In
-    initializeGoogleSignIn();
+    // Initialize Google Sign-In with retry mechanism
+    let retryCount = 0;
+    const maxRetries = 10; // Wait up to 5 seconds
+    
+    function tryInitializeGoogleSignIn() {
+        if (typeof google !== 'undefined' && google.accounts) {
+            console.log('Google SDK loaded successfully');
+            initializeGoogleSignIn();
+        } else if (retryCount < maxRetries) {
+            retryCount++;
+            console.log(`Google SDK not ready yet, retrying ${retryCount}/${maxRetries} in 500ms...`);
+            setTimeout(tryInitializeGoogleSignIn, 500);
+        } else {
+            console.log('Google SDK failed to load after multiple attempts, using demo mode fallback');
+            setupGoogleFallback();
+        }
+    }
+    tryInitializeGoogleSignIn();
+    
+    function setupGoogleFallback() {
+        // Add click handler for demo mode
+        const googleBtn = document.getElementById("googleBtn");
+        if (googleBtn) {
+            googleBtn.addEventListener('click', function() {
+                console.log('Google OAuth not available, showing demo options');
+                simulateGoogleSignIn();
+            });
+            console.log('Google button fallback configured for demo mode');
+        }
+    }
     
     // Update profile section initially
     updateUserProfileSection();
