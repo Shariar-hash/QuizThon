@@ -162,6 +162,8 @@ If you encounter any issues or have questions:
 
 ---
 
-Made with ❤️ by Montasir Majumder Shariar
-
-Portfolio: https://montasir-majumder-shariar-portfolio.vercel.app/
+## About the Developer
+Created by **Montasir Majumder Shariar**
+- Portfolio: https://montasir-majumder-shariar-portfolio.vercel.app/
+- GitHub: https://github.com/Shariar-hash
+- Live Demo: https://quizthon.vercel.app/
