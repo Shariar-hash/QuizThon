@@ -33,9 +33,9 @@ app.use((req, res, next) => {
 });
 
 app.use(express.json({ limit: '10mb' }));
-app.use(express.static('.', {
+app.use(express.static('public', {
     maxAge: process.env.NODE_ENV === 'production' ? '1d' : 0
-})); // Serve static files from current directory
+})); // Serve static files from public directory
 
 // MongoDB Connection
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/quizthon', {
